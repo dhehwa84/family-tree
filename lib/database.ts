@@ -72,6 +72,8 @@ export const relationshipQueries = {
   create: db.prepare("INSERT INTO family_relationships (parent_id, child_id, relationship_type) VALUES (?, ?, ?)"),
   delete: db.prepare("DELETE FROM family_relationships WHERE id = ?"),
   deleteByMembers: db.prepare("DELETE FROM family_relationships WHERE parent_id = ? AND child_id = ?"),
+  deleteByMember: db.prepare("DELETE FROM family_relationships WHERE parent_id = ? OR child_id = ?")
+
 }
 
 // User operations

@@ -93,6 +93,22 @@ export function FamilyTree() {
     }
   }, [])
 
+  const handleDeleteEdge = async (edgeId: string) => {
+    if (!confirm("Are you sure you want to delete this relationship?")) return
+  
+    const relationshipId = edgeId.replace("rel-", "") // your edge ids are "rel-1", etc.
+  
+    try {
+      await fetch(`/api/relationships/${relationshipId}`, { method: "DELETE" })
+  
+      setEdges((eds) => eds.filter((e) => e.id !== edgeId))
+    } catch (error) {
+      console.error("Failed to delete relationship:", error)
+      alert("Error deleting relationship.")
+    }
+  }
+  
+
   // Handle new connections
   const onConnect = useCallback(async (connection: Connection) => {
     if (!connection.source || !connection.target) {
@@ -135,15 +151,27 @@ export function FamilyTree() {
   }
 
   const handleDeleteMember = async (id: number) => {
-    if (confirm("Are you sure you want to delete this family member?")) {
-      try {
-        await fetch(`/api/family-members/${id}`, { method: "DELETE" })
-        loadData()
-      } catch (error) {
-        console.error("Failed to delete family member:", error)
+    if (!confirm("Are you sure you want to delete this family member and related relationships?")) return
+  
+    try {
+      const response = await fetch(`/api/family-members/${id}`, { method: "DELETE" })
+    
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("Failed to delete family member:", errorData)
+        alert(errorData.error || "Unknown error occurred")
+        return
       }
+    
+      // Remove the node and its edges from state
+      setNodes((nds) => nds.filter((n) => n.id !== id.toString()))
+      setEdges((eds) => eds.filter((e) => e.source !== id.toString() && e.target !== id.toString()))
+    } catch (error) {
+      console.error("Network or unexpected error:", error)
     }
+    
   }
+  
 
   const handleFormSubmit = async (data: Partial<FamilyMember>) => {
     try {
@@ -196,6 +224,7 @@ export function FamilyTree() {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onEdgeClick={(_, edge) => handleDeleteEdge(edge.id)}
         onConnect={onConnect}
         onNodeDragStop={handleNodeDragStop}
         nodeTypes={nodeTypes}
