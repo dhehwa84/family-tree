@@ -1,27 +1,35 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { authenticateUser, generateToken } from "@/lib/auth"
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import Database from "better-sqlite3";
+import path from "path";
+import { getSession, sessionOptions } from "@/lib/session";
 
-export async function POST(request: NextRequest) {
-  try {
-    const { email, password } = await request.json()
+// We need to convert Request to Node req/res via Next.js helper
+export async function POST(req: Request) {
+  const body = await req.json();
+  const { email, password } = body;
 
-    const user = await authenticateUser(email, password)
-    if (!user) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
-    }
+  const dbPath = path.resolve(process.cwd(), "family-tree.db");
+  const db = new Database(dbPath);
 
-    const token = generateToken(user)
+  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
 
-    const response = NextResponse.json({ user, token })
-    response.cookies.set("auth-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    })
-
-    return response
-  } catch (error) {
-    return NextResponse.json({ error: "Authentication failed" }, { status: 500 })
+  if (!user) {
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
+
+  const match = await bcrypt.compare(password, user.password_hash);
+  if (!match) {
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  }
+
+  // --- Session hack for Next API route compatibility ---
+  const { cookies } = req as any;
+  const res = new NextResponse(JSON.stringify({ message: "Logged in" }));
+  const session = await getIronSession({ req: { cookies }, res }, sessionOptions);
+  session.email = user.email;
+  session.role = user.role;
+  await session.save();
+
+  return res;
 }

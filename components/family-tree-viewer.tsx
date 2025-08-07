@@ -364,7 +364,7 @@ const loadData = async () => {
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-white" />
-              {stats.familyName} Family - View Mode
+              {stats.familyName} Family
             </h1>
             <div className="flex items-center space-x-6 text-sm text-white/90">
               <div className="flex items-center space-x-1">
@@ -384,8 +384,8 @@ const loadData = async () => {
           
           <div className="flex items-center space-x-4">
             <span className="text-sm text-white/80">Zoom and pan to explore • Click members for details</span>
-            <Link href="/">
-              <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/20 hover:text-white">
+            <Link href="/admin">
+              <Button variant="outline" size="sm" className="border-white/30 text-purple-700 hover:bg-white/20 hover:text-white">
                 <Edit className="w-4 h-4 mr-1" />
                 Edit Mode
               </Button>
