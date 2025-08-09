@@ -1,14 +1,12 @@
 // lib/session.ts
-import { getIronSession } from "iron-session";
+import { SessionOptions } from "iron-session";
 
-export const sessionOptions = {
-  password: process.env.SESSION_PASSWORD!,
+export const sessionOptions: SessionOptions = {
+  password: process.env.IRON_SESSION_PASSWORD || process.env.SESSION_PASSWORD || "",
   cookieName: "family_auth",
   cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.COOKIE_SECURE === "true", // false if running over HTTP
+    sameSite: "lax",
+    path: "/",
   },
 };
-
-export function getSession(req: any, res: any) {
-  return getIronSession(req, res, sessionOptions);
-}

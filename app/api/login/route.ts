@@ -12,31 +12,17 @@ export async function POST(req: NextRequest) {
   const db = new Database(dbPath);
 
   const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-
-  if (!user) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
   const match = await bcrypt.compare(password, user.password_hash);
-  if (!match) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-  }
+  if (!match) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
-  // Create response and attach session
-  const response = NextResponse.json({ message: "Logged in" });
+  const res = NextResponse.json({ message: "Logged in" });
 
   const session = await getIronSession(req.cookies, sessionOptions);
   session.email = user.email;
   session.role = user.role;
-  await session.save();
+  await session.save(); // this sets Set-Cookie on the response internally
 
-  // ⬇️ This is critical: persist the cookie manually
-  response.cookies.set("family_auth", req.cookies.get("family_auth")?.value || "", {
-    path: "/",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  });
-
-  return response;
+  return res;
 }
