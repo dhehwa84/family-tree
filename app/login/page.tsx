@@ -22,6 +22,7 @@ export default function LoginPage() {
       credentials: "include", // ✅ Ensure cookie is sent and received
     });
   
+    console.log(res)
     if (!res.ok) {
       try {
         const data = await res.json();
@@ -32,6 +33,7 @@ export default function LoginPage() {
       return;
     }
   
+    console.log('--')
     // ✅ Redirect manually
     router.push("/admin");
   };
